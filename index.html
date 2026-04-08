@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>keyroll thing</title>
+  <style>
+    body { font-family: sans-serif; }
+    input, button { margin: 4px; }
+  </style>
+</head>
+<body>
+
+<h3>keyroll checker<h3>
+<p>you should<a href="https://discord.crosbreaker.com">join crosbreaker</a></p>
+
+<input id="board" placeholder="board">
+<input id="key" placeholder="recovery key">
+<button onclick="check()">check</button>
+
+<pre id="out"></pre>
+
+<script>
+const url = "https://raw.githubusercontent.com/MercuryWorkshop/sh1mmer/refs/heads/beautifulworld/wax/lib/mp-reco-2024-05-03.txt";
+
+async function check() {
+  let board = document.getElementById("board").value.toLowerCase().trim();
+  let key = document.getElementById("key").value.trim();
+  let out = document.getElementById("out");
+
+  out.textContent = "loading db...\n";
+
+  try {
+    let res = await fetch(url);
+    let text = await res.text();
+    let lines = text.split("\n");
+
+    let boardLines = [];
+    let matches = [];
+
+    for (let line of lines) {
+      if (line.includes("board:" + board + ";")) {
+        boardLines.push(line);
+        if (line.includes(key)) matches.push(line);
+      }
+    }
+
+    if (boardLines.length === 0) {
+      out.textContent += "board not found\n";
+      return;
+    }
+
+    out.textContent += "entries: " + boardLines.length + "\n\n";
+
+    if (matches.length === 0) {
+      out.textContent += "key not found\n";
+      return;
+    }
+
+    for (let m of matches) {
+      out.textContent += m + "\n";
+
+      if (m.includes(";recovery;1;")) {
+        out.textContent += "unkeyrolled\n";
+      } else if (m.includes(";recovery;2;")) {
+        out.textContent += "keyrolled\n";
+      }
+    }
+
+    let v1 = false;
+    let v2 = false;
+
+    for (let l of boardLines) {
+      if (l.includes(";recovery;1;")) v1 = true;
+      if (l.includes(";recovery;2;")) v2 = true;
+    }
+
+    if (v1 && !v2) {
+      out.textContent += "\nonly one key, probably not keyrolled\n";
+    } else if (v1 && v2) {
+      out.textContent += "\nboth keys exist, probably keyrolled :(\n";
+    }
+
+  } catch (e) {
+    out.textContent += "error\n";
+  }
+}
+</script>
+
+</body>
+</html>
